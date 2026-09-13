@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Lint, Typecheck, Build
+    runs-on: ubuntu-latest
+    env:
+      # Non-secret default; matches .env.example. No production values used.
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies (locked)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # Next.js 16 generates route/layout types (.next/types) separately from
+      # a full build. A fresh checkout has no .next/types yet, so a standalone
+      # `tsc --noEmit` fails on the Next-generated `LayoutProps` type until
+      # this runs once. `next build` performs its own equivalent TypeScript
+      # validation internally and passes without this step, but running
+      # typegen explicitly keeps the standalone typecheck script meaningful
+      # and deterministic in CI without weakening strictness or touching
+      # application source.
+      - name: Generate Next.js route/layout types
+        run: npx next typegen
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
