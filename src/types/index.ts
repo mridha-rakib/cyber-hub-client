@@ -1,4 +1,5 @@
 export type * from "@/types/api";
+export * from "@/types/auth";
 
 /** Utility type: make selected keys optional. */
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

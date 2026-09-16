@@ -7,12 +7,31 @@ import {
 /** Field-level validation errors, e.g. `{ email: ["Email already registered"] }`. */
 export type ValidationErrors = Record<string, string[]>;
 
-/** Shape a backend error response is expected to follow. Every field is optional. */
+/**
+ * Wire shape of a Zod `flatten()` validation failure, as sent by the backend's
+ * validation pipe under `error.details.errors`.
+ */
+interface FlattenedZodErrors {
+  formErrors?: string[];
+  fieldErrors?: Record<string, string[]>;
+}
+
+/**
+ * Actual backend error envelope (`api/src/core/errors/exception.filter.ts`):
+ * `{ error: { code, message, details? }, requestId }`. Every field is
+ * defensively optional since malformed/partial bodies must still degrade
+ * safely rather than throw while parsing an error.
+ */
 export interface ApiErrorResponse {
-  success?: false;
-  message?: string;
-  code?: string;
-  errors?: ValidationErrors;
+  error?: {
+    code?: string;
+    message?: string;
+    details?: {
+      errors?: FlattenedZodErrors;
+      [key: string]: unknown;
+    };
+  };
+  requestId?: string;
   [key: string]: unknown;
 }
 
@@ -67,7 +86,7 @@ export class ApiError extends Error {
    * missing or doesn't follow the expected shape.
    */
   static fromResponse(status: number | null, body: unknown, cause?: unknown): ApiError {
-    const payload = isApiErrorResponse(body) ? body : undefined;
+    const payload = isApiErrorResponse(body) ? body.error : undefined;
     const code = payload?.code ?? statusToErrorCode(status);
     const message =
       payload?.message ??
@@ -77,7 +96,7 @@ export class ApiError extends Error {
     return new ApiError(message, {
       status,
       code,
-      errors: payload?.errors,
+      errors: flattenValidationErrors(payload?.details?.errors),
       data: body,
       cause,
     });
@@ -95,6 +114,16 @@ export class ApiError extends Error {
 
 function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
   return typeof value === "object" && value !== null;
+}
+
+/**
+ * Converts the backend's Zod `flatten()` shape into the flat
+ * `{ field: string[] }` map React Hook Form's `setError` expects. Non-field
+ * `formErrors` (schema-level `.refine` failures with no `path`) are dropped
+ * here — surfaced via the top-level `message` instead, not per-field.
+ */
+function flattenValidationErrors(errors: FlattenedZodErrors | undefined): ValidationErrors {
+  return errors?.fieldErrors ?? {};
 }
 
 /** Type guard for narrowing `unknown` catch values to `ApiError`. */

@@ -15,6 +15,7 @@ export const ErrorCode = {
   SERVER_ERROR: "SERVER_ERROR",
   NETWORK_ERROR: "NETWORK_ERROR",
   TIMEOUT_ERROR: "TIMEOUT_ERROR",
+  RATE_LIMITED: "RATE_LIMITED",
   UNKNOWN_ERROR: "UNKNOWN_ERROR",
 } as const;
 
@@ -33,6 +34,10 @@ export function statusToErrorCode(status: number | null): ErrorCode {
       return ErrorCode.NOT_FOUND;
     case 409:
       return ErrorCode.CONFLICT;
+    case 422:
+      return ErrorCode.VALIDATION_ERROR;
+    case 429:
+      return ErrorCode.RATE_LIMITED;
     case 500:
     case 502:
     case 503:
@@ -53,5 +58,6 @@ export const DEFAULT_ERROR_MESSAGES: Record<ErrorCode, string> = {
   SERVER_ERROR: "Something went wrong on our end. Please try again.",
   NETWORK_ERROR: "Unable to reach the server. Check your connection.",
   TIMEOUT_ERROR: "The request took too long. Please try again.",
+  RATE_LIMITED: "Too many attempts. Please wait a moment and try again.",
   UNKNOWN_ERROR: "Something went wrong. Please try again.",
 };
