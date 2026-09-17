@@ -10,11 +10,11 @@ import {
   NotFoundState,
   PageLoading,
 } from "@/components/common/states";
+import { StatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { StatusBadge } from "@/features/internship/status-badge";
 import {
   useAdminInternship,
   useArchiveInternship,

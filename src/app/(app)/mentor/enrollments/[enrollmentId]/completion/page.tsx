@@ -3,9 +3,9 @@
 import { useParams } from "next/navigation";
 
 import { ErrorState, NotFoundState, PageLoading } from "@/components/common/states";
+import { StatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge } from "@/features/internship/status-badge";
 import { useCompletion, useEvaluateCompletion } from "@/hooks/use-internship";
 import { isApiError } from "@/lib/errors/api-error";
 

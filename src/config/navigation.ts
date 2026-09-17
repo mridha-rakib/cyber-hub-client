@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Briefcase, LayoutDashboard, ShieldCheck, UserCog, Users } from "lucide-react";
+import { Award, Briefcase, LayoutDashboard, ShieldCheck, User, UserCog, Users } from "lucide-react";
 
 import { ROUTES } from "@/constants";
 import type { Role } from "@/types/auth";
@@ -28,6 +28,8 @@ export const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "Browse Internships", href: "/internships", icon: Briefcase },
     { label: "My Applications", href: "/dashboard/internships/applications", icon: Briefcase },
     { label: "My Programmes", href: "/dashboard/internships/programmes", icon: Briefcase },
+    { label: "My Certificates", href: "/dashboard/certificates", icon: Award },
+    { label: "My Portfolio", href: "/dashboard/portfolio", icon: User },
   ],
   ROLE_BUSINESS: [
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },

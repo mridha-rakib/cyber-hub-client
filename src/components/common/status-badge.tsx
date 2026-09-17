@@ -13,6 +13,8 @@ const VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outlin
   REVISION_REQUIRED: "destructive",
   NOT_ELIGIBLE: "outline",
   ELIGIBLE: "default",
+  ISSUED: "default",
+  REVOKED: "destructive",
 };
 
 /**

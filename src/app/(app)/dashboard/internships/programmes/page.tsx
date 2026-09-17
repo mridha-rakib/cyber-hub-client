@@ -3,8 +3,8 @@
 import Link from "next/link";
 
 import { EmptyState, ErrorState, PageLoading } from "@/components/common/states";
+import { StatusBadge } from "@/components/common/status-badge";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge } from "@/features/internship/status-badge";
 import { useOwnEnrollments } from "@/hooks/use-internship";
 
 export default function MyProgrammesPage() {

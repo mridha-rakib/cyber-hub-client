@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import { EmptyState, ErrorState, NotFoundState, PageLoading } from "@/components/common/states";
+import { StatusBadge } from "@/components/common/status-badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge } from "@/features/internship/status-badge";
 import { useOwnEnrollment, useOwnTaskAssignments } from "@/hooks/use-internship";
 import { isApiError } from "@/lib/errors/api-error";
 

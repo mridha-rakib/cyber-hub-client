@@ -3,8 +3,8 @@
 import Link from "next/link";
 
 import { EmptyState, ErrorState, PageLoading } from "@/components/common/states";
+import { StatusBadge } from "@/components/common/status-badge";
 import { Card, CardDescription, CardHeader } from "@/components/ui/card";
-import { StatusBadge } from "@/features/internship/status-badge";
 import { useAdminApplications } from "@/hooks/use-internship";
 
 export default function AdminApplicationsQueuePage() {

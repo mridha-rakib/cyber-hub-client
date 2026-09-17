@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { EmptyState, ErrorState, PageLoading } from "@/components/common/states";
+import { StatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { StatusBadge } from "@/features/internship/status-badge";
 import { useAdminInternships, useCreateInternship } from "@/hooks/use-internship";
 
 export default function AdminInternshipsPage() {
