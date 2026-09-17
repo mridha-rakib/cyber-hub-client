@@ -25,7 +25,9 @@ export interface NavItem {
 export const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
   ROLE_LEARNER: [
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
-    { label: "Internships", href: "#", icon: Briefcase, comingSoon: true },
+    { label: "Browse Internships", href: "/internships", icon: Briefcase },
+    { label: "My Applications", href: "/dashboard/internships/applications", icon: Briefcase },
+    { label: "My Programmes", href: "/dashboard/internships/programmes", icon: Briefcase },
   ],
   ROLE_BUSINESS: [
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
@@ -33,7 +35,7 @@ export const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
   ],
   ROLE_MENTOR: [
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
-    { label: "Mentees", href: "#", icon: Users, comingSoon: true },
+    { label: "Review Queue", href: "/mentor", icon: Users },
   ],
   ROLE_CONSULTANT: [
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
@@ -41,7 +43,8 @@ export const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
   ],
   ROLE_ADMIN: [
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
-    { label: "Administration", href: "#", icon: UserCog, comingSoon: true },
+    { label: "Internship Programmes", href: "/admin/internships", icon: UserCog },
+    { label: "Internship Applications", href: "/admin/internship-applications", icon: UserCog },
   ],
 };
 
