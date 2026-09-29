@@ -1,5 +1,14 @@
 import type { LucideIcon } from "lucide-react";
-import { Award, Briefcase, LayoutDashboard, ShieldCheck, User, UserCog, Users } from "lucide-react";
+import {
+  Award,
+  Briefcase,
+  BriefcaseBusiness,
+  LayoutDashboard,
+  ShieldCheck,
+  User,
+  UserCog,
+  Users,
+} from "lucide-react";
 
 import { ROUTES } from "@/constants";
 import type { Role } from "@/types/auth";
@@ -19,8 +28,8 @@ export interface NavItem {
  * is deliberately no "Admin sees everything" rule: Admin gets its own
  * explicit, short list, not a union of every other role's items.
  *
- * Every non-dashboard entry is `comingSoon` because no Wave 1+ product
- * module exists yet — this only establishes where those modules will attach.
+ * Remaining non-dashboard `comingSoon` entries are placeholders for product
+ * modules not yet built — this only establishes where those will attach.
  */
 export const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
   ROLE_LEARNER: [
@@ -30,10 +39,13 @@ export const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "My Programmes", href: "/dashboard/internships/programmes", icon: Briefcase },
     { label: "My Certificates", href: "/dashboard/certificates", icon: Award },
     { label: "My Portfolio", href: "/dashboard/portfolio", icon: User },
+    { label: "Career Listings", href: "/careers", icon: BriefcaseBusiness },
+    { label: "Employer Opportunities", href: "/opportunities", icon: BriefcaseBusiness },
   ],
   ROLE_BUSINESS: [
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
-    { label: "Postings", href: "#", icon: Briefcase, comingSoon: true },
+    { label: "Career Listings", href: "/business/career-listings", icon: Briefcase },
+    { label: "Opportunities", href: "/business/opportunities", icon: BriefcaseBusiness },
   ],
   ROLE_MENTOR: [
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
@@ -47,6 +59,8 @@ export const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
     { label: "Internship Programmes", href: "/admin/internships", icon: UserCog },
     { label: "Internship Applications", href: "/admin/internship-applications", icon: UserCog },
+    { label: "Career Moderation", href: "/admin/career-listings", icon: UserCog },
+    { label: "Opportunity Moderation", href: "/admin/opportunities", icon: UserCog },
   ],
 };
 
