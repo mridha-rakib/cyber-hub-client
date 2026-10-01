@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
   useAdminCloseOpportunity,
-  useAdminOpportunities,
+  useAdminOpportunityLookup,
   usePublishOpportunity,
   useRejectOpportunity,
   useStartReviewOpportunity,
@@ -33,8 +33,7 @@ import { EMPLOYER_OPPORTUNITY_TYPE_LABELS } from "@/types/employer-opportunity";
  */
 export default function AdminOpportunityDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { data, isPending, isError, error, refetch } = useAdminOpportunities({ limit: 100 });
-  const opportunity = data?.find((o) => o.id === id);
+  const { data: opportunity, isPending, isError, error, refetch } = useAdminOpportunityLookup(id);
 
   const startReview = useStartReviewOpportunity(id);
   const publish = usePublishOpportunity(id);
@@ -45,18 +44,27 @@ export default function AdminOpportunityDetailPage() {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   if (isPending) return <PageLoading />;
   if (isError && isApiError(error) && error.status === 403) return <ForbiddenState />;
-  if (isError && !data) return <ErrorState onRetry={() => refetch()} />;
-  if (!opportunity) return <NotFoundState />;
+  if (isError) return <ErrorState onRetry={() => refetch()} />;
+  if (opportunity === null) return <NotFoundState />;
+  if (!opportunity) return <PageLoading />;
 
-  const runTransition = async (fn: () => Promise<unknown>) => {
+  const runTransition = async (fn: () => Promise<unknown>): Promise<boolean> => {
     setConflict(false);
+    setActionError(null);
     try {
       await fn();
+      return true;
     } catch (err) {
-      if (isApiError(err) && err.status === 409) setConflict(true);
+      if (isApiError(err) && err.status === 409) {
+        setConflict(true);
+      } else {
+        setActionError(isApiError(err) ? err.message : "Something went wrong. Please try again.");
+      }
+      return false;
     }
   };
 
@@ -66,11 +74,13 @@ export default function AdminOpportunityDetailPage() {
       return;
     }
     setReasonError(null);
-    await runTransition(() =>
+    const succeeded = await runTransition(() =>
       reject.mutateAsync({ expectedStateVersion: opportunity.stateVersion, reason: reason.trim() }),
     );
-    setRejecting(false);
-    setReason("");
+    if (succeeded) {
+      setRejecting(false);
+      setReason("");
+    }
   };
 
   return (
@@ -95,15 +105,12 @@ export default function AdminOpportunityDetailPage() {
           <StatusBadge status={opportunity.status} />
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          {isError && (
-            <ErrorState
-              title="Couldn't refresh this opportunity"
-              description="Showing the last loaded details. Try again when the connection is available."
-              onRetry={() => refetch()}
-              className="min-h-0 rounded-lg border py-6"
-            />
-          )}
           {conflict && <ConflictState onRefresh={() => refetch()} />}
+          {actionError && (
+            <p className="text-sm text-destructive" role="alert">
+              {actionError}
+            </p>
+          )}
 
           <p className="text-sm whitespace-pre-wrap text-foreground">{opportunity.description}</p>
 

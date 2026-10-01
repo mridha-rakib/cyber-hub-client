@@ -3,12 +3,13 @@
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-
+import { LoadMore } from "@/components/common/load-more";
 import { EmptyState, ErrorState, ForbiddenState, PageLoading } from "@/components/common/states";
 import { StatusBadge } from "@/components/common/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { flattenCursorPages } from "@/hooks/use-cursor-pagination";
 import { useOwnOpportunities } from "@/hooks/use-employer-opportunity";
 import { isApiError } from "@/lib/errors/api-error";
 import type { ListingStatus } from "@/types/career";
@@ -25,10 +26,21 @@ const STATUS_FILTERS: { value: ListingStatus | ""; label: string }[] = [
 
 export default function BusinessOpportunitiesPage() {
   const [status, setStatus] = useState<ListingStatus | "">("");
-  const { data, isPending, isError, error, refetch } = useOwnOpportunities({
+  const {
+    data,
+    isPending,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useOwnOpportunities({
     status: status || undefined,
-    limit: 50,
+    limit: 25,
   });
+  const opportunities = flattenCursorPages(data);
 
   if (isError && isApiError(error) && error.status === 403) {
     return <ForbiddenState />;
@@ -68,7 +80,7 @@ export default function BusinessOpportunitiesPage() {
       {isError && data === undefined && !(isApiError(error) && error.status === 403) && (
         <ErrorState onRetry={() => refetch()} />
       )}
-      {isError && data !== undefined && (
+      {isError && data !== undefined && !isFetchNextPageError && (
         <ErrorState
           title="Couldn't refresh opportunities"
           description="Showing the last loaded results. Try again when the connection is available."
@@ -76,7 +88,7 @@ export default function BusinessOpportunitiesPage() {
           className="min-h-0 rounded-lg border py-6"
         />
       )}
-      {!isPending && data?.length === 0 && (
+      {!isPending && opportunities.length === 0 && (
         <EmptyState
           title="No opportunities yet"
           description="Create your first internship opportunity or student project."
@@ -90,22 +102,32 @@ export default function BusinessOpportunitiesPage() {
           }
         />
       )}
-      {!isPending &&
-        data?.map((opportunity) => (
-          <Link key={opportunity.id} href={`/business/opportunities/${opportunity.id}`}>
-            <Card className="transition-colors hover:bg-muted/50">
-              <CardHeader className="flex-row items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <CardTitle className="truncate text-base">{opportunity.title}</CardTitle>
-                  <Badge variant="outline" className="mt-1">
-                    {EMPLOYER_OPPORTUNITY_TYPE_LABELS[opportunity.type]}
-                  </Badge>
-                </div>
-                <StatusBadge status={opportunity.status} />
-              </CardHeader>
-            </Card>
-          </Link>
-        ))}
+      {!isPending && opportunities.length > 0 && (
+        <>
+          {opportunities.map((opportunity) => (
+            <Link key={opportunity.id} href={`/business/opportunities/${opportunity.id}`}>
+              <Card className="transition-colors hover:bg-muted/50">
+                <CardHeader className="flex-row items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <CardTitle className="truncate text-base">{opportunity.title}</CardTitle>
+                    <Badge variant="outline" className="mt-1">
+                      {EMPLOYER_OPPORTUNITY_TYPE_LABELS[opportunity.type]}
+                    </Badge>
+                  </div>
+                  <StatusBadge status={opportunity.status} />
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
+          <LoadMore
+            hasMore={hasNextPage}
+            isLoading={isFetchingNextPage}
+            isError={isFetchNextPageError}
+            onLoadMore={() => fetchNextPage()}
+            onRetry={() => fetchNextPage()}
+          />
+        </>
+      )}
     </div>
   );
 }

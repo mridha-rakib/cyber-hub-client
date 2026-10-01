@@ -1,4 +1,5 @@
 import { api } from "@/services/api";
+import type { CursorPage } from "@/types/api";
 import type {
   EmployerOpportunity,
   EmployerOpportunityInput,
@@ -58,7 +59,7 @@ export const employerOpportunityService = {
   // --- Public discovery (API-EMP-001/002) ---------------------------------
   async listPublished(
     params: PublicOpportunityListParams = {},
-  ): Promise<PublicEmployerOpportunity[]> {
+  ): Promise<CursorPage<PublicEmployerOpportunity>> {
     return unwrap(api.get(`/opportunities${toQuery(params as Record<string, unknown>)}`));
   },
 
@@ -71,7 +72,7 @@ export const employerOpportunityService = {
     return unwrap(api.post("/business/opportunities", input));
   },
 
-  async listOwn(params: OwnOpportunityListParams = {}): Promise<EmployerOpportunity[]> {
+  async listOwn(params: OwnOpportunityListParams = {}): Promise<CursorPage<EmployerOpportunity>> {
     return unwrap(api.get(`/business/opportunities${toQuery(params as Record<string, unknown>)}`));
   },
 
@@ -102,7 +103,9 @@ export const employerOpportunityService = {
   },
 
   // --- Admin: moderation (API-MOD-002, API-MOD-OPP-*) ---------------------
-  async listAdmin(params: AdminOpportunityListParams = {}): Promise<EmployerOpportunity[]> {
+  async listAdmin(
+    params: AdminOpportunityListParams = {},
+  ): Promise<CursorPage<EmployerOpportunity>> {
     return unwrap(api.get(`/admin/opportunities${toQuery(params as Record<string, unknown>)}`));
   },
 

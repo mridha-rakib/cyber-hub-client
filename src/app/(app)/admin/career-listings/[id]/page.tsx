@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  useAdminCareerListings,
+  useAdminCareerListingLookup,
   useAdminCloseCareerListing,
   usePublishCareerListing,
   useRejectCareerListing,
@@ -37,8 +37,7 @@ import { CAREER_LISTING_TYPE_LABELS } from "@/types/career";
  */
 export default function AdminCareerListingDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { data, isPending, isError, error, refetch } = useAdminCareerListings({ limit: 100 });
-  const listing = data?.find((l) => l.id === id);
+  const { data: listing, isPending, isError, error, refetch } = useAdminCareerListingLookup(id);
 
   const startReview = useStartReviewCareerListing(id);
   const publish = usePublishCareerListing(id);
@@ -49,18 +48,27 @@ export default function AdminCareerListingDetailPage() {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   if (isPending) return <PageLoading />;
   if (isError && isApiError(error) && error.status === 403) return <ForbiddenState />;
-  if (isError && !data) return <ErrorState onRetry={() => refetch()} />;
-  if (!listing) return <NotFoundState />;
+  if (isError) return <ErrorState onRetry={() => refetch()} />;
+  if (listing === null) return <NotFoundState />;
+  if (!listing) return <PageLoading />;
 
-  const runTransition = async (fn: () => Promise<unknown>) => {
+  const runTransition = async (fn: () => Promise<unknown>): Promise<boolean> => {
     setConflict(false);
+    setActionError(null);
     try {
       await fn();
+      return true;
     } catch (err) {
-      if (isApiError(err) && err.status === 409) setConflict(true);
+      if (isApiError(err) && err.status === 409) {
+        setConflict(true);
+      } else {
+        setActionError(isApiError(err) ? err.message : "Something went wrong. Please try again.");
+      }
+      return false;
     }
   };
 
@@ -70,11 +78,13 @@ export default function AdminCareerListingDetailPage() {
       return;
     }
     setReasonError(null);
-    await runTransition(() =>
+    const succeeded = await runTransition(() =>
       reject.mutateAsync({ expectedStateVersion: listing.stateVersion, reason: reason.trim() }),
     );
-    setRejecting(false);
-    setReason("");
+    if (succeeded) {
+      setRejecting(false);
+      setReason("");
+    }
   };
 
   return (
@@ -106,15 +116,12 @@ export default function AdminCareerListingDetailPage() {
           <StatusBadge status={listing.status} />
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          {isError && (
-            <ErrorState
-              title="Couldn't refresh this listing"
-              description="Showing the last loaded details. Try again when the connection is available."
-              onRetry={() => refetch()}
-              className="min-h-0 rounded-lg border py-6"
-            />
-          )}
           {conflict && <ConflictState onRefresh={() => refetch()} />}
+          {actionError && (
+            <p className="text-sm text-destructive" role="alert">
+              {actionError}
+            </p>
+          )}
 
           {listing.skills.length > 0 && (
             <div className="flex flex-wrap gap-1.5">

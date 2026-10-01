@@ -3,7 +3,7 @@
 import { MapPinIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-
+import { LoadMore } from "@/components/common/load-more";
 import { EmptyState, ErrorState, PageLoading } from "@/components/common/states";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { APP_NAME } from "@/constants";
 import { usePublishedCareerListings } from "@/hooks/use-career";
+import { flattenCursorPages } from "@/hooks/use-cursor-pagination";
 import { CAREER_LISTING_TYPE_LABELS, type CareerListingType } from "@/types/career";
 
 const LISTING_TYPES: CareerListingType[] = ["JOB", "INTERNSHIP", "GRADUATE_ROLE", "APPRENTICESHIP"];
@@ -26,14 +27,24 @@ export default function CareerHubPage() {
   const [skill, setSkill] = useState("");
   const [remoteUk, setRemoteUk] = useState(false);
 
-  const { data, isPending, isError, refetch } = usePublishedCareerListings({
+  const {
+    data,
+    isPending,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = usePublishedCareerListings({
     type: type || undefined,
     location: location || undefined,
     level: level || undefined,
     skill: skill || undefined,
     remoteUk: remoteUk || undefined,
-    limit: 30,
+    limit: 25,
   });
+  const listings = flattenCursorPages(data);
 
   const hasFilters = Boolean(type || location || level || skill || remoteUk);
 
@@ -126,7 +137,7 @@ export default function CareerHubPage() {
 
         {isPending && <PageLoading />}
         {isError && data === undefined && <ErrorState onRetry={() => refetch()} />}
-        {isError && data !== undefined && (
+        {isError && data !== undefined && !isFetchNextPageError && (
           <ErrorState
             title="Couldn't refresh listings"
             description="Showing the last loaded results. Try again when the connection is available."
@@ -135,7 +146,7 @@ export default function CareerHubPage() {
           />
         )}
 
-        {!isPending && data?.length === 0 && (
+        {!isPending && listings.length === 0 && (
           <EmptyState
             title={
               hasFilters
@@ -146,44 +157,53 @@ export default function CareerHubPage() {
           />
         )}
 
-        {!isPending && data && data.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {data.map((listing) => (
-              <Link key={listing.id} href={`/careers/${listing.id}`}>
-                <Card className="h-full transition-colors hover:bg-muted/50">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-base">{listing.title}</CardTitle>
-                      <Badge variant="outline" className="shrink-0">
-                        {CAREER_LISTING_TYPE_LABELS[listing.listingType]}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{listing.employerName}</p>
-                  </CardHeader>
-                  <CardContent className="flex flex-col gap-2">
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <MapPinIcon className="size-3.5" aria-hidden="true" />
-                      {listing.location}
-                      {listing.remoteUk && (
-                        <Badge variant="secondary" className="ml-1">
-                          Remote UK
+        {!isPending && listings.length > 0 && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {listings.map((listing) => (
+                <Link key={listing.id} href={`/careers/${listing.id}`}>
+                  <Card className="h-full transition-colors hover:bg-muted/50">
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-base">{listing.title}</CardTitle>
+                        <Badge variant="outline" className="shrink-0">
+                          {CAREER_LISTING_TYPE_LABELS[listing.listingType]}
                         </Badge>
-                      )}
-                    </div>
-                    {listing.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {listing.skills.slice(0, 4).map((s) => (
-                          <Badge key={s} variant="outline">
-                            {s}
-                          </Badge>
-                        ))}
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                      <p className="text-sm text-muted-foreground">{listing.employerName}</p>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-2">
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <MapPinIcon className="size-3.5" aria-hidden="true" />
+                        {listing.location}
+                        {listing.remoteUk && (
+                          <Badge variant="secondary" className="ml-1">
+                            Remote UK
+                          </Badge>
+                        )}
+                      </div>
+                      {listing.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {listing.skills.slice(0, 4).map((s) => (
+                            <Badge key={s} variant="outline">
+                              {s}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+            <LoadMore
+              hasMore={hasNextPage}
+              isLoading={isFetchingNextPage}
+              isError={isFetchNextPageError}
+              onLoadMore={() => fetchNextPage()}
+              onRetry={() => fetchNextPage()}
+            />
+          </>
         )}
       </main>
     </div>

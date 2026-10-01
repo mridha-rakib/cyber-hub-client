@@ -10,6 +10,18 @@ export interface Paginated<T> {
   };
 }
 
+/** Opaque-cursor page shape used by the Career and Opportunity APIs. */
+export interface CursorPage<T> {
+  data: T[];
+  meta: {
+    page: {
+      limit: number;
+      nextCursor: string | null;
+      hasMore: boolean;
+    };
+  };
+}
+
 export interface ApiResponse<T> {
   data: T;
   message?: string;

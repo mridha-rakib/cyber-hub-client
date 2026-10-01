@@ -46,6 +46,7 @@ export default function BusinessOpportunityDetailPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
   const [saved, setSaved] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   if (isPending) return <PageLoading />;
   if (isError) {
@@ -55,12 +56,19 @@ export default function BusinessOpportunityDetailPage() {
   }
   if (!opportunity) return <PageLoading />;
 
-  const runAction = async (fn: () => Promise<unknown>) => {
+  const runAction = async (fn: () => Promise<unknown>): Promise<boolean> => {
     setConflict(false);
+    setActionError(null);
     try {
       await fn();
+      return true;
     } catch (err) {
-      if (isApiError(err) && err.status === 409) setConflict(true);
+      if (isApiError(err) && err.status === 409) {
+        setConflict(true);
+      } else {
+        setActionError(isApiError(err) ? err.message : "Something went wrong. Please try again.");
+      }
+      return false;
     }
   };
 
@@ -86,6 +94,7 @@ export default function BusinessOpportunityDetailPage() {
           description: err.fieldError("description"),
           applicationUrl: err.fieldError("applicationUrl"),
         });
+        setSaveError(err.message);
         return;
       }
       setSaveError(isApiError(err) ? err.message : "Something went wrong. Please try again.");
@@ -116,6 +125,11 @@ export default function BusinessOpportunityDetailPage() {
             />
           )}
           {conflict && <ConflictState onRefresh={() => refetch()} />}
+          {actionError && (
+            <p className="text-sm text-destructive" role="alert">
+              {actionError}
+            </p>
+          )}
 
           {opportunity.status === "REJECTED" && opportunity.moderationReason && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
@@ -144,11 +158,11 @@ export default function BusinessOpportunityDetailPage() {
                     <Button
                       variant="destructive"
                       disabled={close.isPending}
-                      onClick={() =>
-                        runAction(() => close.mutateAsync(opportunity.stateVersion)).then(() =>
-                          setConfirmingClose(false),
-                        )
-                      }
+                      onClick={async () => {
+                        if (await runAction(() => close.mutateAsync(opportunity.stateVersion))) {
+                          setConfirmingClose(false);
+                        }
+                      }}
                     >
                       {close.isPending ? "Closing…" : "Confirm close"}
                     </Button>

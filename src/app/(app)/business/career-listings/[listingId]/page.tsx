@@ -37,6 +37,7 @@ export default function BusinessCareerListingDetailPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
   const [saved, setSaved] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   if (isPending) return <PageLoading />;
   if (isError) {
@@ -46,12 +47,19 @@ export default function BusinessCareerListingDetailPage() {
   }
   if (!listing) return <PageLoading />;
 
-  const runAction = async (fn: () => Promise<unknown>) => {
+  const runAction = async (fn: () => Promise<unknown>): Promise<boolean> => {
     setConflict(false);
+    setActionError(null);
     try {
       await fn();
+      return true;
     } catch (err) {
-      if (isApiError(err) && err.status === 409) setConflict(true);
+      if (isApiError(err) && err.status === 409) {
+        setConflict(true);
+      } else {
+        setActionError(isApiError(err) ? err.message : "Something went wrong. Please try again.");
+      }
+      return false;
     }
   };
 
@@ -79,6 +87,7 @@ export default function BusinessCareerListingDetailPage() {
           skills: err.fieldError("skills"),
           applicationUrl: err.fieldError("applicationUrl"),
         });
+        setSaveError(err.message);
         return;
       }
       setSaveError(isApiError(err) ? err.message : "Something went wrong. Please try again.");
@@ -115,6 +124,11 @@ export default function BusinessCareerListingDetailPage() {
             />
           )}
           {conflict && <ConflictState onRefresh={() => refetch()} />}
+          {actionError && (
+            <p className="text-sm text-destructive" role="alert">
+              {actionError}
+            </p>
+          )}
 
           {listing.status === "REJECTED" && listing.moderationReason && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
@@ -143,11 +157,11 @@ export default function BusinessCareerListingDetailPage() {
                     <Button
                       variant="destructive"
                       disabled={close.isPending}
-                      onClick={() =>
-                        runAction(() => close.mutateAsync(listing.stateVersion)).then(() =>
-                          setConfirmingClose(false),
-                        )
-                      }
+                      onClick={async () => {
+                        if (await runAction(() => close.mutateAsync(listing.stateVersion))) {
+                          setConfirmingClose(false);
+                        }
+                      }}
                     >
                       {close.isPending ? "Closing…" : "Confirm close"}
                     </Button>

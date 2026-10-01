@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { findInCursorPages, useCursorPagination } from "@/hooks/use-cursor-pagination";
 import {
   type AdminListingListParams,
   careerService,
@@ -17,23 +18,24 @@ import type { BusinessCareerListingInput, BusinessCareerListingUpdateInput } fro
  */
 export const careerListingKeys = {
   all: ["career-listings"] as const,
+  publishedLists: () => [...careerListingKeys.all, "published", "list"] as const,
   publishedList: (params: PublicListingListParams) =>
-    [...careerListingKeys.all, "published", "list", params] as const,
+    [...careerListingKeys.publishedLists(), params] as const,
   published: (id: string) => [...careerListingKeys.all, "published", "detail", id] as const,
-  ownList: (params: OwnListingListParams) =>
-    [...careerListingKeys.all, "own", "list", params] as const,
+  ownLists: () => [...careerListingKeys.all, "own", "list"] as const,
+  ownList: (params: OwnListingListParams) => [...careerListingKeys.ownLists(), params] as const,
   own: (id: string) => [...careerListingKeys.all, "own", "detail", id] as const,
+  adminLists: () => [...careerListingKeys.all, "admin", "list"] as const,
   adminList: (params: AdminListingListParams) =>
-    [...careerListingKeys.all, "admin", "list", params] as const,
+    [...careerListingKeys.adminLists(), params] as const,
 };
 
 // --- Public discovery --------------------------------------------------
 
 export function usePublishedCareerListings(params: PublicListingListParams = {}) {
-  return useQuery({
-    queryKey: careerListingKeys.publishedList(params),
-    queryFn: () => careerService.listPublished(params),
-  });
+  return useCursorPagination(careerListingKeys.publishedLists(), params, (pageParams) =>
+    careerService.listPublished(pageParams),
+  );
 }
 
 export function usePublishedCareerListing(listingId: string) {
@@ -47,10 +49,9 @@ export function usePublishedCareerListing(listingId: string) {
 // --- Business: own management -------------------------------------------
 
 export function useOwnCareerListings(params: OwnListingListParams = {}) {
-  return useQuery({
-    queryKey: careerListingKeys.ownList(params),
-    queryFn: () => careerService.listOwn(params),
-  });
+  return useCursorPagination(careerListingKeys.ownLists(), params, (pageParams) =>
+    careerService.listOwn(pageParams),
+  );
 }
 
 export function useOwnCareerListing(listingId: string) {
@@ -106,9 +107,25 @@ export function useCloseCareerListing(listingId: string) {
 // --- Admin: moderation ---------------------------------------------------
 
 export function useAdminCareerListings(params: AdminListingListParams = {}) {
+  return useCursorPagination(careerListingKeys.adminLists(), params, (pageParams) =>
+    careerService.listAdmin(pageParams),
+  );
+}
+
+/** API-MOD-001 exposes no dedicated detail endpoint, so walk its cursor page chain. */
+export function useAdminCareerListingLookup(listingId: string) {
+  const queryClient = useQueryClient();
   return useQuery({
-    queryKey: careerListingKeys.adminList(params),
-    queryFn: () => careerService.listAdmin(params),
+    queryKey: [...careerListingKeys.all, "admin", "lookup", listingId],
+    queryFn: () =>
+      findInCursorPages(
+        queryClient,
+        careerListingKeys.adminLists(),
+        listingId,
+        careerService.listAdmin,
+        { limit: 100 },
+      ),
+    enabled: Boolean(listingId),
   });
 }
 

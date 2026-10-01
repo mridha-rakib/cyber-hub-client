@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
-
+import { LoadMore } from "@/components/common/load-more";
 import { EmptyState, ErrorState, PageLoading } from "@/components/common/states";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { APP_NAME } from "@/constants";
+import { flattenCursorPages } from "@/hooks/use-cursor-pagination";
 import { usePublishedOpportunities } from "@/hooks/use-employer-opportunity";
 import {
   EMPLOYER_OPPORTUNITY_TYPE_LABELS,
@@ -24,11 +25,21 @@ export default function OpportunitiesCataloguePage() {
   const [type, setType] = useState("");
   const [skill, setSkill] = useState("");
 
-  const { data, isPending, isError, refetch } = usePublishedOpportunities({
+  const {
+    data,
+    isPending,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = usePublishedOpportunities({
     type: type || undefined,
     skill: skill || undefined,
-    limit: 30,
+    limit: 25,
   });
+  const opportunities = flattenCursorPages(data);
 
   const hasFilters = Boolean(type || skill);
 
@@ -84,7 +95,7 @@ export default function OpportunitiesCataloguePage() {
 
         {isPending && <PageLoading />}
         {isError && data === undefined && <ErrorState onRetry={() => refetch()} />}
-        {isError && data !== undefined && (
+        {isError && data !== undefined && !isFetchNextPageError && (
           <ErrorState
             title="Couldn't refresh opportunities"
             description="Showing the last loaded results. Try again when the connection is available."
@@ -93,7 +104,7 @@ export default function OpportunitiesCataloguePage() {
           />
         )}
 
-        {!isPending && data?.length === 0 && (
+        {!isPending && opportunities.length === 0 && (
           <EmptyState
             title={
               hasFilters
@@ -104,35 +115,44 @@ export default function OpportunitiesCataloguePage() {
           />
         )}
 
-        {!isPending && data && data.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {data.map((opportunity) => (
-              <Link key={opportunity.id} href={`/opportunities/${opportunity.id}`}>
-                <Card className="h-full transition-colors hover:bg-muted/50">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-base">{opportunity.title}</CardTitle>
-                      <Badge variant="outline" className="shrink-0">
-                        {EMPLOYER_OPPORTUNITY_TYPE_LABELS[opportunity.type]}
-                      </Badge>
-                    </div>
-                    <CardDescription className="line-clamp-2">
-                      {opportunity.description}
-                    </CardDescription>
-                  </CardHeader>
-                  {opportunity.skills && opportunity.skills.length > 0 && (
-                    <CardContent className="flex flex-wrap gap-1.5">
-                      {opportunity.skills.slice(0, 4).map((s) => (
-                        <Badge key={s} variant="outline">
-                          {s}
+        {!isPending && opportunities.length > 0 && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {opportunities.map((opportunity) => (
+                <Link key={opportunity.id} href={`/opportunities/${opportunity.id}`}>
+                  <Card className="h-full transition-colors hover:bg-muted/50">
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-base">{opportunity.title}</CardTitle>
+                        <Badge variant="outline" className="shrink-0">
+                          {EMPLOYER_OPPORTUNITY_TYPE_LABELS[opportunity.type]}
                         </Badge>
-                      ))}
-                    </CardContent>
-                  )}
-                </Card>
-              </Link>
-            ))}
-          </div>
+                      </div>
+                      <CardDescription className="line-clamp-2">
+                        {opportunity.description}
+                      </CardDescription>
+                    </CardHeader>
+                    {opportunity.skills && opportunity.skills.length > 0 && (
+                      <CardContent className="flex flex-wrap gap-1.5">
+                        {opportunity.skills.slice(0, 4).map((s) => (
+                          <Badge key={s} variant="outline">
+                            {s}
+                          </Badge>
+                        ))}
+                      </CardContent>
+                    )}
+                  </Card>
+                </Link>
+              ))}
+            </div>
+            <LoadMore
+              hasMore={hasNextPage}
+              isLoading={isFetchingNextPage}
+              isError={isFetchNextPageError}
+              onLoadMore={() => fetchNextPage()}
+              onRetry={() => fetchNextPage()}
+            />
+          </>
         )}
       </main>
     </div>
