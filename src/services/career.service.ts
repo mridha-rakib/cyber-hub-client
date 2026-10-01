@@ -1,4 +1,5 @@
 import { api } from "@/services/api";
+import type { CursorPage } from "@/types/api";
 import type {
   BusinessCareerListingInput,
   BusinessCareerListingUpdateInput,
@@ -59,7 +60,9 @@ function toQuery(params: Record<string, unknown>): string {
  */
 export const careerService = {
   // --- Public discovery (API-CAR-001/002) ---------------------------------
-  async listPublished(params: PublicListingListParams = {}): Promise<PublicCareerListing[]> {
+  async listPublished(
+    params: PublicListingListParams = {},
+  ): Promise<CursorPage<PublicCareerListing>> {
     return unwrap(api.get(`/career-listings${toQuery(params as Record<string, unknown>)}`));
   },
 
@@ -72,7 +75,7 @@ export const careerService = {
     return unwrap(api.post("/business/career-listings", input));
   },
 
-  async listOwn(params: OwnListingListParams = {}): Promise<CareerListing[]> {
+  async listOwn(params: OwnListingListParams = {}): Promise<CursorPage<CareerListing>> {
     return unwrap(
       api.get(`/business/career-listings${toQuery(params as Record<string, unknown>)}`),
     );
@@ -99,7 +102,7 @@ export const careerService = {
   },
 
   // --- Admin: moderation (API-MOD-001, API-MOD-CAR-*) ---------------------
-  async listAdmin(params: AdminListingListParams = {}): Promise<CareerListing[]> {
+  async listAdmin(params: AdminListingListParams = {}): Promise<CursorPage<CareerListing>> {
     return unwrap(api.get(`/admin/career-listings${toQuery(params as Record<string, unknown>)}`));
   },
 

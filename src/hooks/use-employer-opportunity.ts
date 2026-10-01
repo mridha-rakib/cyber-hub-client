@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { findInCursorPages, useCursorPagination } from "@/hooks/use-cursor-pagination";
 import {
   type AdminOpportunityListParams,
   employerOpportunityService,
@@ -15,23 +16,25 @@ import type {
 /** Same public/own/admin cache-separation rationale as `careerListingKeys`. */
 export const employerOpportunityKeys = {
   all: ["employer-opportunities"] as const,
+  publishedLists: () => [...employerOpportunityKeys.all, "published", "list"] as const,
   publishedList: (params: PublicOpportunityListParams) =>
-    [...employerOpportunityKeys.all, "published", "list", params] as const,
+    [...employerOpportunityKeys.publishedLists(), params] as const,
   published: (id: string) => [...employerOpportunityKeys.all, "published", "detail", id] as const,
+  ownLists: () => [...employerOpportunityKeys.all, "own", "list"] as const,
   ownList: (params: OwnOpportunityListParams) =>
-    [...employerOpportunityKeys.all, "own", "list", params] as const,
+    [...employerOpportunityKeys.ownLists(), params] as const,
   own: (id: string) => [...employerOpportunityKeys.all, "own", "detail", id] as const,
+  adminLists: () => [...employerOpportunityKeys.all, "admin", "list"] as const,
   adminList: (params: AdminOpportunityListParams) =>
-    [...employerOpportunityKeys.all, "admin", "list", params] as const,
+    [...employerOpportunityKeys.adminLists(), params] as const,
 };
 
 // --- Public discovery --------------------------------------------------
 
 export function usePublishedOpportunities(params: PublicOpportunityListParams = {}) {
-  return useQuery({
-    queryKey: employerOpportunityKeys.publishedList(params),
-    queryFn: () => employerOpportunityService.listPublished(params),
-  });
+  return useCursorPagination(employerOpportunityKeys.publishedLists(), params, (pageParams) =>
+    employerOpportunityService.listPublished(pageParams),
+  );
 }
 
 export function usePublishedOpportunity(opportunityId: string) {
@@ -45,10 +48,9 @@ export function usePublishedOpportunity(opportunityId: string) {
 // --- Business: own management -------------------------------------------
 
 export function useOwnOpportunities(params: OwnOpportunityListParams = {}) {
-  return useQuery({
-    queryKey: employerOpportunityKeys.ownList(params),
-    queryFn: () => employerOpportunityService.listOwn(params),
-  });
+  return useCursorPagination(employerOpportunityKeys.ownLists(), params, (pageParams) =>
+    employerOpportunityService.listOwn(pageParams),
+  );
 }
 
 export function useOwnOpportunity(opportunityId: string) {
@@ -105,9 +107,25 @@ export function useCloseOpportunity(opportunityId: string) {
 // --- Admin: moderation ---------------------------------------------------
 
 export function useAdminOpportunities(params: AdminOpportunityListParams = {}) {
+  return useCursorPagination(employerOpportunityKeys.adminLists(), params, (pageParams) =>
+    employerOpportunityService.listAdmin(pageParams),
+  );
+}
+
+/** API-MOD-002 exposes no dedicated detail endpoint, so walk its cursor page chain. */
+export function useAdminOpportunityLookup(opportunityId: string) {
+  const queryClient = useQueryClient();
   return useQuery({
-    queryKey: employerOpportunityKeys.adminList(params),
-    queryFn: () => employerOpportunityService.listAdmin(params),
+    queryKey: [...employerOpportunityKeys.all, "admin", "lookup", opportunityId],
+    queryFn: () =>
+      findInCursorPages(
+        queryClient,
+        employerOpportunityKeys.adminLists(),
+        opportunityId,
+        employerOpportunityService.listAdmin,
+        { limit: 100 },
+      ),
+    enabled: Boolean(opportunityId),
   });
 }
 

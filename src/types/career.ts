@@ -32,13 +32,9 @@ export interface PublicCareerListing {
   location: string;
   level: string;
   skills: string[];
-  applicationUrl: string;
   listingType: CareerListingType;
   remoteUk: boolean;
-  status: ListingStatus;
-  publishedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
+  publishedAt: string;
 }
 
 /**
