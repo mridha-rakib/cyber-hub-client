@@ -46,14 +46,15 @@ export const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
     { label: "Career Listings", href: "/business/career-listings", icon: Briefcase },
     { label: "Opportunities", href: "/business/opportunities", icon: BriefcaseBusiness },
+    { label: "Consulting", href: "/business/consulting", icon: ShieldCheck },
   ],
   ROLE_MENTOR: [
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
     { label: "Review Queue", href: "/mentor", icon: Users },
   ],
   ROLE_CONSULTANT: [
-    { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
-    { label: "Consulting requests", href: "#", icon: ShieldCheck, comingSoon: true },
+    { label: "Dashboard", href: "/consultant", icon: LayoutDashboard },
+    { label: "Consulting Requests", href: "/consultant/requests", icon: ShieldCheck },
   ],
   ROLE_ADMIN: [
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
@@ -61,6 +62,7 @@ export const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "Internship Applications", href: "/admin/internship-applications", icon: UserCog },
     { label: "Career Moderation", href: "/admin/career-listings", icon: UserCog },
     { label: "Opportunity Moderation", href: "/admin/opportunities", icon: UserCog },
+    { label: "Consulting", href: "/admin/consulting", icon: ShieldCheck },
   ],
 };
 
@@ -82,6 +84,6 @@ export const ROLE_LANDING_ROUTE: Record<Role, string> = {
   ROLE_LEARNER: ROUTES.dashboard,
   ROLE_BUSINESS: ROUTES.dashboard,
   ROLE_MENTOR: ROUTES.dashboard,
-  ROLE_CONSULTANT: ROUTES.dashboard,
+  ROLE_CONSULTANT: "/consultant",
   ROLE_ADMIN: ROUTES.dashboard,
 };

@@ -37,6 +37,11 @@ function makeQueryClient(): QueryClient {
     // that runs in addition to this, not instead of it.
     queryCache: new QueryCache({
       onError: (error, query) => {
+        // An anonymous session probe is an expected public-page state, not
+        // a user-facing failure.
+        if (query.queryKey[0] === "session" && isApiError(error) && error.status === 401) {
+          return;
+        }
         // Silence background refetch failures when cached data is still
         // shown — surfacing a toast for every failed background refetch
         // would be noisy. Errors on the initial fetch (no data yet) still
@@ -49,7 +54,13 @@ function makeQueryClient(): QueryClient {
       },
     }),
     mutationCache: new MutationCache({
-      onError: (error) => {
+      onError: (error, _variables, _context, mutation) => {
+        // A mutation that renders its own inline, context-specific error
+        // (e.g. Consulting workflow conflicts) opts out so the user isn't
+        // shown a second, more generic message for the same failure.
+        if (mutation.meta?.inlineErrors === true) {
+          return;
+        }
         const { message } = handleError(error);
         showNotification({ type: "error", message });
       },

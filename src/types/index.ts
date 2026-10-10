@@ -1,6 +1,7 @@
 export type * from "@/types/api";
 export * from "@/types/auth";
 export type * from "@/types/certificate";
+export type * from "@/types/consulting";
 export type * from "@/types/internship";
 export type * from "@/types/portfolio";
 

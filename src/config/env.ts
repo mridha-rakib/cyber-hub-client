@@ -8,7 +8,7 @@ import { z } from "zod";
  * they will be validated the first time this module is imported.
  */
 const envSchema = z.object({
-  NEXT_PUBLIC_API_URL: z.url().default("http://localhost:8000/api"),
+  NEXT_PUBLIC_API_URL: z.url().default("http://localhost:8000/api/v1"),
 });
 
 const parsed = envSchema.safeParse({

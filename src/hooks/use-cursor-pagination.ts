@@ -15,6 +15,7 @@ export function useCursorPagination<T, TParams extends CursorParams>(
   key: readonly unknown[],
   params: TParams,
   fetchPage: (params: TParams) => Promise<CursorPage<T>>,
+  options?: { enabled?: boolean },
 ) {
   const { cursor: _ignoredCursor, ...filters } = params;
 
@@ -28,6 +29,7 @@ export function useCursorPagination<T, TParams extends CursorParams>(
       } as TParams),
     getNextPageParam: (lastPage) =>
       lastPage.meta.page.hasMore ? (lastPage.meta.page.nextCursor ?? undefined) : undefined,
+    enabled: options?.enabled,
   });
 }
 
