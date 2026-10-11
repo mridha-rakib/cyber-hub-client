@@ -43,6 +43,18 @@ async function unwrap<T>(promise: Promise<{ data: Envelope<T> }>): Promise<T> {
   return response.data.data;
 }
 
+/**
+ * List responses carry pagination `meta` beside `data`
+ * (`{ success, data: T[], meta, requestId }`), so a cursor page is rebuilt
+ * from both fields rather than read from `data` alone.
+ */
+async function unwrapPage<T>(
+  promise: Promise<{ data: Envelope<T[]> & { meta: CursorPage<T>["meta"] } }>,
+): Promise<CursorPage<T>> {
+  const response = await promise;
+  return { data: response.data.data, meta: response.data.meta };
+}
+
 function toQuery(params: Record<string, unknown>): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -63,7 +75,7 @@ export const careerService = {
   async listPublished(
     params: PublicListingListParams = {},
   ): Promise<CursorPage<PublicCareerListing>> {
-    return unwrap(api.get(`/career-listings${toQuery(params as Record<string, unknown>)}`));
+    return unwrapPage(api.get(`/career-listings${toQuery(params as Record<string, unknown>)}`));
   },
 
   async getPublished(listingId: string): Promise<PublicCareerListing> {
@@ -76,7 +88,7 @@ export const careerService = {
   },
 
   async listOwn(params: OwnListingListParams = {}): Promise<CursorPage<CareerListing>> {
-    return unwrap(
+    return unwrapPage(
       api.get(`/business/career-listings${toQuery(params as Record<string, unknown>)}`),
     );
   },
@@ -103,7 +115,9 @@ export const careerService = {
 
   // --- Admin: moderation (API-MOD-001, API-MOD-CAR-*) ---------------------
   async listAdmin(params: AdminListingListParams = {}): Promise<CursorPage<CareerListing>> {
-    return unwrap(api.get(`/admin/career-listings${toQuery(params as Record<string, unknown>)}`));
+    return unwrapPage(
+      api.get(`/admin/career-listings${toQuery(params as Record<string, unknown>)}`),
+    );
   },
 
   async startReview(listingId: string, expectedStateVersion: number): Promise<CareerListing> {

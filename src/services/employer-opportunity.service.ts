@@ -41,6 +41,18 @@ async function unwrap<T>(promise: Promise<{ data: Envelope<T> }>): Promise<T> {
   return response.data.data;
 }
 
+/**
+ * List responses carry pagination `meta` beside `data`
+ * (`{ success, data: T[], meta, requestId }`), so a cursor page is rebuilt
+ * from both fields rather than read from `data` alone.
+ */
+async function unwrapPage<T>(
+  promise: Promise<{ data: Envelope<T[]> & { meta: CursorPage<T>["meta"] } }>,
+): Promise<CursorPage<T>> {
+  const response = await promise;
+  return { data: response.data.data, meta: response.data.meta };
+}
+
 function toQuery(params: Record<string, unknown>): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -60,7 +72,7 @@ export const employerOpportunityService = {
   async listPublished(
     params: PublicOpportunityListParams = {},
   ): Promise<CursorPage<PublicEmployerOpportunity>> {
-    return unwrap(api.get(`/opportunities${toQuery(params as Record<string, unknown>)}`));
+    return unwrapPage(api.get(`/opportunities${toQuery(params as Record<string, unknown>)}`));
   },
 
   async getPublished(opportunityId: string): Promise<PublicEmployerOpportunity> {
@@ -73,7 +85,9 @@ export const employerOpportunityService = {
   },
 
   async listOwn(params: OwnOpportunityListParams = {}): Promise<CursorPage<EmployerOpportunity>> {
-    return unwrap(api.get(`/business/opportunities${toQuery(params as Record<string, unknown>)}`));
+    return unwrapPage(
+      api.get(`/business/opportunities${toQuery(params as Record<string, unknown>)}`),
+    );
   },
 
   async getOwn(opportunityId: string): Promise<EmployerOpportunity> {
@@ -106,7 +120,7 @@ export const employerOpportunityService = {
   async listAdmin(
     params: AdminOpportunityListParams = {},
   ): Promise<CursorPage<EmployerOpportunity>> {
-    return unwrap(api.get(`/admin/opportunities${toQuery(params as Record<string, unknown>)}`));
+    return unwrapPage(api.get(`/admin/opportunities${toQuery(params as Record<string, unknown>)}`));
   },
 
   async startReview(
