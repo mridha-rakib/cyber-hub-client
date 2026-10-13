@@ -143,11 +143,17 @@ export function ConsultingQueryError({
   );
 }
 
-export function RequestListSkeleton({ rows = 4 }: { rows?: number }) {
+export function RequestListSkeleton({
+  rows = 4,
+  label = "Loading requests…",
+}: {
+  rows?: number;
+  label?: string;
+}) {
   return (
     <div className="divide-y rounded-xl ring-1 ring-foreground/10" aria-busy="true">
       <span className="sr-only" role="status">
-        Loading requests…
+        {label}
       </span>
       {Array.from({ length: rows }, (_, index) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder rows
@@ -163,11 +169,11 @@ export function RequestListSkeleton({ rows = 4 }: { rows?: number }) {
   );
 }
 
-export function WorkspaceSkeleton() {
+export function WorkspaceSkeleton({ label = "Loading request…" }: { label?: string }) {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6" aria-busy="true">
       <span className="sr-only" role="status">
-        Loading request…
+        {label}
       </span>
       <div className="space-y-2">
         <Skeleton className="h-4 w-32" />

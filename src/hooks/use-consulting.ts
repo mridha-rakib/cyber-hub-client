@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useCursorPagination } from "@/hooks/use-cursor-pagination";
+import { securityWorkKeys } from "@/hooks/use-security-work";
 import { isApiError } from "@/lib/errors/api-error";
 import {
   type BusinessConsultingListParams,
@@ -147,12 +148,22 @@ export function useDeclineConsultingRequest(audience: OperationalAudience, reque
   });
 }
 
+/**
+ * D-4: the server moves the request's PLANNED/IN_PROGRESS assessments to the
+ * new consultant in the same transaction, so assessment views are re-read
+ * here rather than patched — the client never re-implements the propagation.
+ */
 export function useAssignConsultant(requestId: string) {
+  const queryClient = useQueryClient();
   const refresh = useRefreshOperational("admin", requestId);
   return useMutation({
     mutationFn: (consultantUserId: string) => consultingService.assign(requestId, consultantUserId),
     meta: inlineErrors,
-    onSuccess: refresh,
+    onSuccess: () =>
+      Promise.all([
+        refresh(),
+        queryClient.invalidateQueries({ queryKey: securityWorkKeys.assessments("admin") }),
+      ]),
   });
 }
 

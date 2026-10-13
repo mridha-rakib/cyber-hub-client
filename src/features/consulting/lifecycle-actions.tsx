@@ -89,7 +89,7 @@ async function explainFailure(
       return {
         title: "Completion is blocked",
         description:
-          "This request can only be completed once its linked delivery work exists and is complete. It stays in progress until then.",
+          "A request can be completed only when at least one of its assessments is completed and none is still planned or in progress. Cancelled assessments neither count towards completion nor block it. The request stays in progress until then.",
       };
     }
     return {
@@ -142,6 +142,9 @@ export function ConsultingLifecycleActions({
       showNotification({ type: "success", message: SUCCESS_MESSAGES[action] });
     } catch (error) {
       setFailure(await explainFailure(error, action, request));
+      // A lifecycle conflict (D-6 STATE_CONFLICT) re-reads the authoritative
+      // request so the view matches the server; the command is not replayed.
+      if (isApiError(error) && error.code === "STATE_CONFLICT") await onRefresh();
     }
   };
 
@@ -304,8 +307,9 @@ export function ConsultingLifecycleActions({
             onCancel={() => setConfirming(null)}
           >
             <p>
-              Completion is final. The server only allows it once the request's linked delivery work
-              is complete.
+              Completion is final. The server allows it only when at least one linked assessment is
+              completed and none is still planned or in progress — cancelled assessments neither
+              count nor block.
             </p>
           </ConfirmPanel>
         ) : (
@@ -348,7 +352,7 @@ export function ConsultingLifecycleActions({
   );
 }
 
-function ConfirmPanel({
+export function ConfirmPanel({
   title,
   confirmLabel,
   pending,

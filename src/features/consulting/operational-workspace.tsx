@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   BriefcaseBusiness,
+  ClipboardCheck,
   FileLock2,
   Route,
   ShieldAlert,
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CreateAssessmentAction } from "@/features/security-work/create-assessment";
 import {
   type OperationalAudience,
   useAssignConsultant,
@@ -109,6 +111,20 @@ export function OperationalWorkspace({
               />
             </CardContent>
           </Card>
+          {request.status !== "DECLINED" && (
+            <Card className={cardSpacing}>
+              <CardHeader className="border-b">
+                <SectionHeading icon={ClipboardCheck} title="Security assessment" />
+              </CardHeader>
+              <CardContent>
+                <CreateAssessmentAction
+                  audience={audience}
+                  request={request}
+                  onRefresh={query.refetch}
+                />
+              </CardContent>
+            </Card>
+          )}
           {audience === "admin" ? (
             <AssignmentCard request={request} />
           ) : (

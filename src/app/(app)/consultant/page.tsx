@@ -1,17 +1,19 @@
 "use client";
 
-import { ArrowRight, ClipboardList, ShieldCheck } from "lucide-react";
+import { ArrowRight, ClipboardCheck, ClipboardList, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ConsultingPageHeader, SectionHeading } from "@/features/consulting/consulting-ui";
 import { ConsultingRequestPreview } from "@/features/consulting/request-preview";
 import { RoleGate } from "@/features/consulting/role-gate";
+import { AssessmentPreview } from "@/features/security-work/assessment-list";
 import { useSession } from "@/hooks/use-session";
 
 /**
- * UI-CON-001 — Wave 4 Consulting slice only. The screen's future assessment
- * summary (API-ASM-002) belongs to Wave 5 and is intentionally not rendered.
+ * UI-CON-001 — composed from the assigned consulting queue (API-CON-006) and
+ * the assigned assessment summary (API-ASM-002). Score/report panels are
+ * Wave 6 and are not rendered.
  */
 export default function ConsultantDashboardPage() {
   return (
@@ -39,24 +41,39 @@ function ConsultantDashboard() {
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
-        <Card className="gap-5 py-5 [--card-spacing:--spacing(5)]">
-          <CardHeader className="border-b">
-            <SectionHeading
-              icon={ClipboardList}
-              title="Assigned consulting requests"
-              description="Your most recently submitted assignments."
-            />
-          </CardHeader>
-          <CardContent>
-            <ConsultingRequestPreview
-              audience="consultant"
-              limit={5}
-              emptyTitle="No assigned consulting requests"
-              emptyDescription="Requests will appear here when an Admin assigns them to you."
-              viewAllHref="/consultant/requests"
-            />
-          </CardContent>
-        </Card>
+        <div className="min-w-0 space-y-6">
+          <Card className="gap-5 py-5 [--card-spacing:--spacing(5)]">
+            <CardHeader className="border-b">
+              <SectionHeading
+                icon={ClipboardList}
+                title="Assigned consulting requests"
+                description="Your most recently submitted assignments."
+              />
+            </CardHeader>
+            <CardContent>
+              <ConsultingRequestPreview
+                audience="consultant"
+                limit={5}
+                emptyTitle="No assigned consulting requests"
+                emptyDescription="Requests will appear here when an Admin assigns them to you."
+                viewAllHref="/consultant/requests"
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="gap-5 py-5 [--card-spacing:--spacing(5)]">
+            <CardHeader className="border-b">
+              <SectionHeading
+                icon={ClipboardCheck}
+                title="Assigned assessments"
+                description="Your most recently created security assessments."
+              />
+            </CardHeader>
+            <CardContent>
+              <AssessmentPreview audience="consultant" limit={5} />
+            </CardContent>
+          </Card>
+        </div>
 
         <Card size="sm" className="gap-3">
           <CardHeader>

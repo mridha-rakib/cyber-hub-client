@@ -41,3 +41,6 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 export function isRequestId(value: string | undefined): value is string {
   return typeof value === "string" && UUID_PATTERN.test(value);
 }
+
+/** The same UUID check for any other operational route id (assessment, finding). */
+export const isRouteId = isRequestId;

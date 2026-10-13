@@ -3,6 +3,7 @@ import {
   Award,
   Briefcase,
   BriefcaseBusiness,
+  ClipboardCheck,
   LayoutDashboard,
   ShieldCheck,
   User,
@@ -55,6 +56,7 @@ export const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
   ROLE_CONSULTANT: [
     { label: "Dashboard", href: "/consultant", icon: LayoutDashboard },
     { label: "Consulting Requests", href: "/consultant/requests", icon: ShieldCheck },
+    { label: "Assessments", href: "/consultant/assessments", icon: ClipboardCheck },
   ],
   ROLE_ADMIN: [
     { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
@@ -63,6 +65,7 @@ export const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "Career Moderation", href: "/admin/career-listings", icon: UserCog },
     { label: "Opportunity Moderation", href: "/admin/opportunities", icon: UserCog },
     { label: "Consulting", href: "/admin/consulting", icon: ShieldCheck },
+    { label: "Security Assessments", href: "/admin/assessments", icon: ClipboardCheck },
   ],
 };
 
