@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROLE_LABELS } from "@/config/navigation";
+import { SecuritySummaryModule } from "@/features/business-security/security-dashboard";
 import { SectionHeading } from "@/features/consulting/consulting-ui";
 import { ConsultingRequestPreview } from "@/features/consulting/request-preview";
 import { useSession } from "@/hooks/use-session";
@@ -27,6 +28,8 @@ export default function DashboardPage() {
           {session.employer ? ` · ${session.employer.companyName}` : ""}
         </p>
       </div>
+
+      {role === "ROLE_BUSINESS" && <SecuritySummaryModule />}
 
       {role === "ROLE_BUSINESS" || role === "ROLE_ADMIN" ? (
         <ConsultingDashboardModule audience={role === "ROLE_BUSINESS" ? "business" : "admin"} />

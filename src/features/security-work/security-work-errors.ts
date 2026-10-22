@@ -10,7 +10,9 @@ export type SecurityWorkFailureKind =
   | "session"
   | "rate-limited"
   | "network"
-  | "server";
+  | "server"
+  | "methodology-unavailable"
+  | "file-unavailable";
 
 export interface SecurityWorkFailure {
   kind: SecurityWorkFailureKind;
@@ -41,7 +43,11 @@ export function currentStateVersionOf(error: unknown): number | null {
  */
 export function describeSecurityWorkError(
   error: unknown,
-  context: { subject: "assessment" | "finding" | "request"; action: string; preserved?: string },
+  context: {
+    subject: "assessment" | "finding" | "request" | "report" | "score";
+    action: string;
+    preserved?: string;
+  },
 ): SecurityWorkFailure {
   const preserved = context.preserved ? ` ${context.preserved}` : "";
   const base = { refresh: false, currentStateVersion: null };
@@ -56,6 +62,26 @@ export function describeSecurityWorkError(
   }
 
   if (error.status === 409) {
+    // Permanent configuration gates (GAP-009 / GAP-013): nothing changed, no
+    // refresh can help and the request is never retried automatically.
+    if (error.code === "SCORE_METHODOLOGY_NOT_CONFIGURED") {
+      return {
+        ...base,
+        kind: "methodology-unavailable",
+        title: "No methodology configured",
+        description:
+          "An approved security score methodology isn't configured yet, so no score was calculated.",
+      };
+    }
+    if (error.code === "FILE_POLICY_NOT_CONFIGURED") {
+      return {
+        ...base,
+        kind: "file-unavailable",
+        title: "Report file not available",
+        description:
+          "The report file policy isn't configured yet, so the report file can't be released or downloaded.",
+      };
+    }
     if (error.code === "STATE_VERSION_CONFLICT") {
       return {
         kind: "version",

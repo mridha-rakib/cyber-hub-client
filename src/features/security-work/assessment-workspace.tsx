@@ -1,6 +1,14 @@
 "use client";
 
-import { ArrowLeft, FileLock2, ListChecks, Route, UserRoundCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  FileLock2,
+  FileText,
+  Gauge,
+  ListChecks,
+  Route,
+  UserRoundCheck,
+} from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -16,6 +24,8 @@ import {
   SectionHeading,
   WorkspaceSkeleton,
 } from "@/features/consulting/consulting-ui";
+import { ReportSection } from "@/features/security-reports/report-section";
+import { ScorePanel } from "@/features/security-reports/score-workspace";
 import type { OperationalAudience } from "@/hooks/use-consulting";
 import { useAssessment } from "@/hooks/use-security-work";
 import type { Assessment } from "@/types/security-work";
@@ -30,7 +40,8 @@ const cardSpacing = "gap-5 py-5 [--card-spacing:--spacing(5)]";
 /**
  * UI-CON-005 (Consultant) and UI-ADM-022 (Admin) assessment workspace:
  * operational metadata, the scope snapshot, WF-ASM commands and the linked
- * findings. Score and report controls belong to Wave 6 and are not mounted.
+ * findings, plus the Wave 6 score panel and assessment report section
+ * (API-SCR-002, API-RPT-013/001).
  *
  * Any read failure (including a 404 after reassignment or a concealed
  * record) replaces the whole workspace, so no stale actions remain on screen.
@@ -108,6 +119,28 @@ export function AssessmentWorkspace({
             </CardHeader>
             <CardContent>
               <FindingsPanel audience={audience} assessment={assessment} />
+            </CardContent>
+          </Card>
+
+          <Card className={cardSpacing}>
+            <CardHeader className="border-b">
+              <SectionHeading
+                icon={FileText}
+                title="Reports"
+                description="Client reports prepared from this assessment, newest first."
+              />
+            </CardHeader>
+            <CardContent>
+              <ReportSection audience={audience} assessment={assessment} />
+            </CardContent>
+          </Card>
+
+          <Card className={cardSpacing}>
+            <CardHeader className="border-b">
+              <SectionHeading icon={Gauge} title="Security score" />
+            </CardHeader>
+            <CardContent>
+              <ScorePanel audience={audience} assessment={assessment} />
             </CardContent>
           </Card>
 

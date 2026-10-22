@@ -20,6 +20,11 @@ export function useLogin() {
   return useMutation({
     mutationFn: (payload: LoginPayload) => authService.login(payload),
     onSuccess: (session) => {
+      // G6D-04: drop everything cached for whoever used this browser before
+      // (e.g. after a session expiry without an explicit logout), so no
+      // private data of a previous account is ever rendered for this one.
+      // Every query refetches on demand under the new session.
+      queryClient.clear();
       // Seed the cache directly instead of just invalidating — the response
       // already *is* the session, so there's no reason to wait on a refetch
       // before the authenticated shell can render.
