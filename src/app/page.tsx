@@ -25,6 +25,14 @@ export default function Home() {
           A frontend foundation for the Cyber Security Hub platform — sign in or register to get
           started.
         </p>
+        <nav aria-label="Discover" className="flex flex-wrap justify-center gap-2">
+          <Button asChild variant="outline">
+            <Link href="/resources">Learning Resources</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/courses">Course Deals</Link>
+          </Button>
+        </nav>
       </main>
     </div>
   );

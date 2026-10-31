@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOutIcon } from "lucide-react";
+import { Building2Icon, LogOutIcon, UserIcon, UserXIcon } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -48,6 +49,29 @@ export function UserMenu({ user }: { user: SessionUser }) {
           <span className="font-normal text-muted-foreground">{user.email}</span>
           <span className="font-normal text-muted-foreground">{ROLE_LABELS[user.role]}</span>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/account/profile">
+            <UserIcon />
+            My profile
+          </Link>
+        </DropdownMenuItem>
+        {user.role === "ROLE_BUSINESS" && (
+          <DropdownMenuItem asChild>
+            <Link href="/business/settings/profile">
+              <Building2Icon />
+              Business profile
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {user.role === "ROLE_LEARNER" && (
+          <DropdownMenuItem asChild>
+            <Link href="/account/delete">
+              <UserXIcon />
+              Request account deletion
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onSelect={handleLogout}>
           <LogOutIcon />
